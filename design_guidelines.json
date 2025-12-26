@@ -1,0 +1,162 @@
+{
+  "identity": {
+    "name": "HeritageFund",
+    "persona": "The Family Ledger",
+    "vibe": "Professional, Warm, Secure, Timeless",
+    "archetype": "Organic & Earthy (Trust) + Swiss High-Contrast (Clarity)"
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Cormorant Garamond, serif",
+      "weights": ["Light (300)", "Regular (400)", "SemiBold (600)"],
+      "usage": "All H1-H3 headings. Use italic for emphasis words.",
+      "letter_spacing": "tracking-tight"
+    },
+    "body": {
+      "font_family": "Manrope, sans-serif",
+      "weights": ["Regular (400)", "Medium (500)", "Bold (700)"],
+      "usage": "Body text, UI elements, Data visualization, Numbers",
+      "letter_spacing": "tracking-normal"
+    },
+    "mono": {
+      "font_family": "JetBrains Mono, monospace",
+      "usage": "Transaction IDs, API keys, Technical data"
+    }
+  },
+  "colors": {
+    "light_mode": {
+      "background": "#F9F7F2",
+      "foreground": "#1C1917",
+      "card": "#FFFFFF",
+      "card_foreground": "#1C1917",
+      "primary": "#064E3B",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#E7E5E4",
+      "secondary_foreground": "#1C1917",
+      "accent": "#9F4A34",
+      "accent_foreground": "#FFFFFF",
+      "muted": "#F5F5F4",
+      "muted_foreground": "#78716C",
+      "border": "#E7E5E4"
+    },
+    "dark_mode": {
+      "background": "#0F172A",
+      "foreground": "#F9FAFB",
+      "card": "#1E293B",
+      "card_foreground": "#F9FAFB",
+      "primary": "#10B981",
+      "primary_foreground": "#022C22",
+      "secondary": "#334155",
+      "secondary_foreground": "#F9FAFB",
+      "accent": "#F87171",
+      "accent_foreground": "#FFFFFF",
+      "muted": "#1E293B",
+      "muted_foreground": "#94A3B8",
+      "border": "#334155"
+    },
+    "semantic": {
+      "success": "#059669",
+      "warning": "#D97706",
+      "error": "#DC2626",
+      "info": "#2563EB"
+    }
+  },
+  "visual_enhancers": {
+    "textures": {
+      "paper_grain": "url('/assets/noise.png') opacity-5",
+      "glass_blur": "backdrop-blur-xl backdrop-saturate-150"
+    },
+    "shadows": {
+      "soft": "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+      "deep": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      "glow": "0 0 15px rgba(6, 78, 59, 0.3)"
+    },
+    "borders": {
+      "light": "1px solid #E7E5E4",
+      "dark": "1px solid rgba(255, 255, 255, 0.1)",
+      "active": "1px solid #064E3B"
+    },
+    "radius": {
+      "default": "0.5rem",
+      "button": "0.25rem",
+      "card": "0.75rem"
+    }
+  },
+  "grids": {
+    "marketing": {
+      "type": "Tetris Grid",
+      "classes": "grid grid-cols-1 md:grid-cols-12 gap-8",
+      "rules": "Asymmetry is key. Use col-span-7 and col-span-5 pairings."
+    },
+    "dashboard": {
+      "type": "Control Room",
+      "classes": "grid grid-cols-1 md:grid-cols-4 gap-6",
+      "rules": "Dense data. Use col-span-1 for metrics, col-span-2/3 for charts."
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm font-medium tracking-wide",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      "outline": "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+      "ghost": "hover:bg-accent hover:text-accent-foreground"
+    },
+    "cards": {
+      "base": "rounded-xl border bg-card text-card-foreground shadow-sm",
+      "interactive": "hover:shadow-md transition-all duration-200 hover:-translate-y-1"
+    },
+    "inputs": {
+      "base": "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+    }
+  },
+  "image_urls": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1597656619916-7afa666bc566",
+      "alt": "French country house stone architecture",
+      "usage": "Hero section background with overlay"
+    },
+    "family_moment": {
+      "url": "https://images.pexels.com/photos/8848794/pexels-photo-8848794.jpeg",
+      "alt": "Multigenerational family looking at photo album",
+      "usage": "About Us or 'For Heirs' section"
+    },
+    "notary_meeting": {
+      "url": "https://images.unsplash.com/photo-1565688527174-775059ac429c",
+      "alt": "Professional notary office meeting",
+      "usage": "Notary partner section"
+    },
+    "paris_apartment": {
+      "url": "https://images.unsplash.com/photo-1620643482290-1714b6f350a8",
+      "alt": "Paris Haussmann apartment",
+      "usage": "Real estate asset example"
+    }
+  },
+  "motion": {
+    "transitions": "transition-all duration-300 ease-out",
+    "hover": "hover:-translate-y-1 hover:shadow-lg",
+    "entrance": "animate-in fade-in slide-in-from-bottom-4 duration-700"
+  },
+  "accessibility": {
+    "contrast": "Ensure 4.5:1 for normal text, 3:1 for large text.",
+    "focus": "Visible focus rings on all interactive elements.",
+    "aria": "Use aria-label for icon-only buttons."
+  },
+  "instructions_to_main_agent": [
+    "Use 'Cormorant Garamond' for all headings to establish the Heritage brand.",
+    "Use 'Manrope' for all UI text and numbers for clarity.",
+    "Implement the 'Tetris Grid' for the landing page to avoid a generic Bootstrap look.",
+    "Use the defined color palette strictly. Do not use default Tailwind colors.",
+    "Ensure Dark Mode is fully supported and tested.",
+    "Use the provided image URLs for specific sections.",
+    "Add 'data-testid' to all interactive elements."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Avoid generic 'AI slop' designs. Be bold with spacing and typography.",
+    "Do not use gradients for dark colors.",
+    "Create depth with z-index and shadows.",
+    "No 'transition: all'. Animate specific properties.",
+    "No center-aligned app containers.",
+    "Use micro-animations for all interactions.",
+    "Use 'sonner' for toasts."
+  ]
+}
