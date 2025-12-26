@@ -440,3 +440,100 @@ export default function CreateCampaign() {
         </div>
     );
 }
+
+
+// Image Uploader Component
+function ImageUploader({ images, onImagesChange, uploading, setUploading }) {
+    const onDrop = useCallback(async (acceptedFiles) => {
+        setUploading(true);
+        const newImages = [...images];
+        
+        for (const file of acceptedFiles) {
+            if (newImages.length >= 10) break;
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await axios.post(`${API}/upload/image`, formData, {
+                    withCredentials: true,
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                
+                const imageUrl = response.data.url.startsWith('/') 
+                    ? `${process.env.REACT_APP_BACKEND_URL}${response.data.url}`
+                    : response.data.url;
+                newImages.push(imageUrl);
+            } catch (error) {
+                console.error('Upload error:', error);
+                toast.error(`Erreur upload: ${file.name}`);
+            }
+        }
+        
+        onImagesChange(newImages);
+        setUploading(false);
+    }, [images, onImagesChange, setUploading]);
+    
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.gif'] },
+        maxSize: 5 * 1024 * 1024,
+        disabled: uploading || images.length >= 10
+    });
+    
+    const removeImage = (index) => {
+        const newImages = images.filter((_, i) => i !== index);
+        onImagesChange(newImages);
+    };
+    
+    return (
+        <div className="space-y-4">
+            <div 
+                {...getRootProps()} 
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                    isDragActive ? 'border-primary bg-primary/5' : 'border-muted hover:border-primary/50'
+                } ${uploading ? 'opacity-50 cursor-wait' : ''}`}
+            >
+                <input {...getInputProps()} data-testid="dropzone-input" />
+                {uploading ? (
+                    <>
+                        <Loader2 className="h-10 w-10 mx-auto text-primary mb-4 animate-spin" />
+                        <p className="text-muted-foreground">Upload en cours...</p>
+                    </>
+                ) : (
+                    <>
+                        <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground mb-2">
+                            {isDragActive ? 'Déposez vos photos ici' : 'Glissez vos photos ici ou cliquez pour sélectionner'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                            PNG, JPG, WebP jusqu'à 5MB - Max 10 photos ({images.length}/10)
+                        </p>
+                    </>
+                )}
+            </div>
+            
+            {images.length > 0 && (
+                <div className="grid grid-cols-4 md:grid-cols-5 gap-3">
+                    {images.map((img, i) => (
+                        <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-muted group">
+                            <img src={img} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                            <button
+                                type="button"
+                                onClick={() => removeImage(i)}
+                                className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <X className="h-3 w-3" />
+                            </button>
+                            {i === 0 && (
+                                <span className="absolute bottom-1 left-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded">
+                                    Principale
+                                </span>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
