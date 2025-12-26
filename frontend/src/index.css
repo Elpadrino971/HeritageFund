@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  @apply bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Custom scrollbar for dark mode */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-light-bg-secondary dark:bg-dark-bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-light-border dark:bg-dark-border rounded-lg;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-light-text-secondary dark:bg-dark-text-secondary;
+}
+
+/* Smooth transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Button base styles */
+@layer components {
+  .btn-primary {
+    @apply bg-light-primary dark:bg-dark-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-light-primary-dark dark:hover:bg-dark-primary-dark transition-all shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-light-bg-secondary dark:bg-dark-bg-secondary text-light-text dark:text-dark-text px-6 py-3 rounded-lg font-semibold hover:bg-light-border dark:hover:bg-dark-border transition-all;
+  }
+
+  .card {
+    @apply bg-light-bg dark:bg-dark-bg-secondary rounded-xl p-6 shadow-md border border-light-border dark:border-dark-border;
+  }
+
+  .input {
+    @apply bg-light-bg dark:bg-dark-bg border border-light-border dark:border-dark-border rounded-lg px-4 py-2 text-light-text dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-light-primary dark:focus:ring-dark-primary;
+  }
+}
