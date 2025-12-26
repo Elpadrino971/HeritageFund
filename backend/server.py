@@ -583,9 +583,9 @@ async def create_checkout(
         raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
 
 @api_router.get("/payments/status/{session_id}")
-async def get_payment_status(session_id: str, user: User = Depends(require_auth)):
+async def get_payment_status(session_id: str, request: Request, user: User = Depends(require_auth)):
     """Get payment status and process if successful"""
-    host_url = "https://heritageguard.preview.emergentagent.com"
+    host_url = str(request.base_url).rstrip("/")
     webhook_url = f"{host_url}/api/webhook/stripe"
     
     stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
