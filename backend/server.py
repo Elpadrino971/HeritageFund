@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -8,6 +8,7 @@ import logging
 import uuid
 import httpx
 import certifi
+import base64
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
@@ -29,6 +30,9 @@ db = client[os.environ['DB_NAME']]
 
 # Stripe
 stripe_api_key = os.environ.get('STRIPE_API_KEY')
+
+# Cloudinary (optional - falls back to base64 storage)
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 
 # FastAPI app
 app = FastAPI(title="HeritageFund API")
