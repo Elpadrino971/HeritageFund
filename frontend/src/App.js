@@ -1,54 +1,106 @@
-import { useEffect } from "react";
+import React from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Toaster } from "./components/ui/sonner";
+import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// Layout
+import Navbar from "./components/layout/Navbar";
+import Footer from "./components/layout/Footer";
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+// Pages
+import Landing from "./pages/Landing";
+import AuthCallback from "./pages/AuthCallback";
+import Campaigns from "./pages/Campaigns";
+import CampaignDetail from "./pages/CampaignDetail";
+import CalculatorPage from "./pages/CalculatorPage";
+import HeirDashboard from "./pages/HeirDashboard";
+import CreateCampaign from "./pages/CreateCampaign";
+import InvestorDashboard from "./pages/InvestorDashboard";
+import NotaryDashboard from "./pages/NotaryDashboard";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+
+function AppContent() {
+    const location = useLocation();
+
+    // Check for session_id in URL fragment (OAuth callback)
+    if (location.hash?.includes('session_id=')) {
+        return <AuthCallback />;
     }
-  };
 
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+    return (
+        <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1">
+                <Routes>
+                    {/* Public routes */}
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/auth/callback" element={<AuthCallback />} />
+                    <Route path="/calculator" element={<CalculatorPage />} />
+                    <Route path="/campaigns" element={<Campaigns />} />
+                    <Route path="/campaigns/:id" element={<CampaignDetail />} />
+                    <Route path="/payment/success" element={<PaymentSuccess />} />
 
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+                    {/* Protected routes - Heir */}
+                    <Route
+                        path="/dashboard/heir"
+                        element={
+                            <ProtectedRoute>
+                                <HeirDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/dashboard/heir/create"
+                        element={
+                            <ProtectedRoute>
+                                <CreateCampaign />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Protected routes - Investor */}
+                    <Route
+                        path="/dashboard/investor"
+                        element={
+                            <ProtectedRoute>
+                                <InvestorDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Protected routes - Notary */}
+                    <Route
+                        path="/dashboard/notary"
+                        element={
+                            <ProtectedRoute>
+                                <NotaryDashboard />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    {/* Fallback */}
+                    <Route path="*" element={<Landing />} />
+                </Routes>
+            </main>
+            <Footer />
+            <Toaster position="top-right" richColors />
+        </div>
+    );
+}
 
 function App() {
-  return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
-  );
+    return (
+        <ThemeProvider>
+            <AuthProvider>
+                <BrowserRouter>
+                    <AppContent />
+                </BrowserRouter>
+            </AuthProvider>
+        </ThemeProvider>
+    );
 }
 
 export default App;
