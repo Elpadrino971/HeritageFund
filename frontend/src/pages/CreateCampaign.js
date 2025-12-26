@@ -367,39 +367,15 @@ export default function CreateCampaign() {
                                 <CardDescription>Ajoutez des photos et vérifiez votre campagne</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                {/* Photo upload placeholder */}
+                                {/* Photo upload with dropzone */}
                                 <div className="space-y-2">
                                     <Label>Photos du bien</Label>
-                                    <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                                        <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-4" />
-                                        <p className="text-muted-foreground mb-2">
-                                            Glissez vos photos ici ou cliquez pour sélectionner
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            PNG, JPG jusqu'à 10MB - Max 10 photos
-                                        </p>
-                                        <Input
-                                            type="text"
-                                            placeholder="Ou collez une URL d'image"
-                                            className="mt-4 max-w-md mx-auto"
-                                            onBlur={(e) => {
-                                                if (e.target.value) {
-                                                    updateField('images', [...formData.images, e.target.value]);
-                                                    e.target.value = '';
-                                                }
-                                            }}
-                                            data-testid="input-image-url"
-                                        />
-                                    </div>
-                                    {formData.images.length > 0 && (
-                                        <div className="flex gap-2 flex-wrap mt-2">
-                                            {formData.images.map((img, i) => (
-                                                <div key={i} className="relative w-20 h-20 rounded overflow-hidden bg-muted">
-                                                    <img src={img} alt="" className="w-full h-full object-cover" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                    <ImageUploader 
+                                        images={formData.images}
+                                        onImagesChange={(images) => updateField('images', images)}
+                                        uploading={uploading}
+                                        setUploading={setUploading}
+                                    />
                                 </div>
 
                                 {/* Summary */}
