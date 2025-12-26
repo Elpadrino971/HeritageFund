@@ -770,6 +770,68 @@ async def platform_stats():
     }
 
 # ================================
+# IMAGE UPLOAD
+# ================================
+
+@api_router.post("/upload/image")
+async def upload_image(file: UploadFile = File(...), user: User = Depends(require_auth)):
+    """Upload an image and return its URL"""
+    # Validate file type
+    allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Invalid file type. Use JPEG, PNG, WebP or GIF")
+    
+    # Read file content
+    content = await file.read()
+    
+    # Max 5MB
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Max 5MB")
+    
+    try:
+        if CLOUDINARY_URL:
+            # Use Cloudinary
+            import cloudinary
+            import cloudinary.uploader
+            cloudinary.config(cloudinary_url=CLOUDINARY_URL)
+            result = cloudinary.uploader.upload(content, folder="heritagefund")
+            return {"url": result['secure_url'], "public_id": result['public_id']}
+        else:
+            # Store in MongoDB as base64 (fallback)
+            image_id = f"img_{uuid.uuid4().hex[:12]}"
+            b64_content = base64.b64encode(content).decode('utf-8')
+            
+            doc = {
+                "image_id": image_id,
+                "user_id": user.user_id,
+                "filename": file.filename,
+                "content_type": file.content_type,
+                "data": b64_content,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.images.insert_one(doc)
+            
+            # Return URL to our image endpoint
+            return {"url": f"/api/images/{image_id}", "image_id": image_id}
+    except Exception as e:
+        logger.error(f"Image upload error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upload image")
+
+@api_router.get("/images/{image_id}")
+async def get_image(image_id: str):
+    """Serve an image from MongoDB"""
+    image = await db.images.find_one({"image_id": image_id}, {"_id": 0})
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    content = base64.b64decode(image['data'])
+    return Response(
+        content=content,
+        media_type=image['content_type'],
+        headers={"Cache-Control": "public, max-age=31536000"}
+    )
+
+# ================================
 # HEALTH CHECK
 # ================================
 
