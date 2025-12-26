@@ -514,6 +514,8 @@ async def create_checkout(
     user: User = Depends(require_auth)
 ):
     """Create Stripe checkout session for investment"""
+    logger.info(f"Creating checkout for campaign {campaign_id}, amount {amount}, user {user.user_id}")
+    
     if amount < 50:
         raise HTTPException(status_code=400, detail="Minimum investment is 50€")
     
@@ -529,44 +531,52 @@ async def create_checkout(
     host_url = str(request.base_url).rstrip("/")
     webhook_url = f"{host_url}/api/webhook/stripe"
     
-    stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+    logger.info(f"Stripe key present: {bool(stripe_api_key)}, Origin: {origin}")
     
-    success_url = f"{origin}/payment/success?session_id={{CHECKOUT_SESSION_ID}}"
-    cancel_url = f"{origin}/campaigns/{campaign_id}"
-    
-    metadata = {
-        "user_id": user.user_id,
-        "campaign_id": campaign_id,
-        "type": "investment"
-    }
-    
-    checkout_request = CheckoutSessionRequest(
-        amount=float(amount),
-        currency="eur",
-        success_url=success_url,
-        cancel_url=cancel_url,
-        metadata=metadata
-    )
-    
-    session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_request)
-    
-    # Create payment transaction record
-    transaction_id = f"tx_{uuid.uuid4().hex[:12]}"
-    tx_doc = {
-        "transaction_id": transaction_id,
-        "user_id": user.user_id,
-        "campaign_id": campaign_id,
-        "amount": amount,
-        "currency": "eur",
-        "session_id": session.session_id,
-        "payment_status": "pending",
-        "transaction_type": "investment",
-        "metadata": metadata,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.payment_transactions.insert_one(tx_doc)
-    
-    return {"url": session.url, "session_id": session.session_id}
+    try:
+        stripe_checkout = StripeCheckout(api_key=stripe_api_key, webhook_url=webhook_url)
+        
+        success_url = f"{origin}/payment/success?session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{origin}/campaigns/{campaign_id}"
+        
+        metadata = {
+            "user_id": user.user_id,
+            "campaign_id": campaign_id,
+            "type": "investment"
+        }
+        
+        checkout_request = CheckoutSessionRequest(
+            amount=float(amount),
+            currency="eur",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata=metadata
+        )
+        
+        logger.info(f"Creating Stripe session with amount: {amount} EUR")
+        session: CheckoutSessionResponse = await stripe_checkout.create_checkout_session(checkout_request)
+        logger.info(f"Stripe session created: {session.session_id}")
+        
+        # Create payment transaction record
+        transaction_id = f"tx_{uuid.uuid4().hex[:12]}"
+        tx_doc = {
+            "transaction_id": transaction_id,
+            "user_id": user.user_id,
+            "campaign_id": campaign_id,
+            "amount": amount,
+            "currency": "eur",
+            "session_id": session.session_id,
+            "payment_status": "pending",
+            "transaction_type": "investment",
+            "metadata": metadata,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.payment_transactions.insert_one(tx_doc)
+        
+        return {"url": session.url, "session_id": session.session_id}
+    except Exception as e:
+        logger.error(f"Stripe checkout error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
 
 @api_router.get("/payments/status/{session_id}")
 async def get_payment_status(session_id: str, user: User = Depends(require_auth)):
