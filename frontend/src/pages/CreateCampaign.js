@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useDropzone } from 'react-dropzone';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -18,7 +19,9 @@ import {
     Landmark, 
     Briefcase,
     CheckCircle,
-    Upload
+    Upload,
+    X,
+    Loader2
 } from 'lucide-react';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
@@ -28,6 +31,7 @@ export default function CreateCampaign() {
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
     
     const [formData, setFormData] = useState({
         title: '',
