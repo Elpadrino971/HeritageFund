@@ -481,13 +481,16 @@ async def my_investments(user: User = Depends(require_auth)):
         {"_id": 0}
     ).to_list(100)
     
-    # Get campaign details for each investment
-    for inv in investments:
-        campaign = await db.campaigns.find_one(
-            {"campaign_id": inv["campaign_id"]},
-            {"_id": 0, "title": 1, "interest_rate": 1, "duration_months": 1, "status": 1}
-        )
-        inv["campaign"] = campaign
+    # Batch fetch campaigns to avoid N+1 queries
+    campaign_ids = list(set(inv["campaign_id"] for inv in investments if inv.get("campaign_id")))
+    if campaign_ids:
+        campaigns = await db.campaigns.find(
+            {"campaign_id": {"$in": campaign_ids}},
+            {"_id": 0, "campaign_id": 1, "title": 1, "interest_rate": 1, "duration_months": 1, "status": 1}
+        ).to_list(len(campaign_ids))
+        campaign_map = {c["campaign_id"]: c for c in campaigns}
+        for inv in investments:
+            inv["campaign"] = campaign_map.get(inv.get("campaign_id"))
     
     return investments
 
