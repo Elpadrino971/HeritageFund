@@ -19,9 +19,12 @@ from emergentintegrations.payments.stripe.checkout import (
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection with SSL certificate
+# MongoDB connection - use SSL for Atlas, no SSL for localhost
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
+if 'mongodb+srv' in mongo_url or 'mongodb.net' in mongo_url:
+    client = AsyncIOMotorClient(mongo_url, tlsCAFile=certifi.where())
+else:
+    client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Stripe
