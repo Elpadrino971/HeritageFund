@@ -407,10 +407,13 @@ async def list_campaigns(status: Optional[str] = None, limit: int = 20):
     
     campaigns = await db.campaigns.find(query, {"_id": 0}).limit(limit).to_list(limit)
     
-    # Get user info for each campaign
-    for camp in campaigns:
-        user = await db.users.find_one({"user_id": camp["user_id"]}, {"_id": 0, "name": 1, "picture": 1})
-        camp["user"] = user
+    # Batch fetch users to avoid N+1 queries
+    user_ids = list(set(c["user_id"] for c in campaigns if c.get("user_id")))
+    if user_ids:
+        users = await db.users.find({"user_id": {"$in": user_ids}}, {"_id": 0, "user_id": 1, "name": 1, "picture": 1}).to_list(len(user_ids))
+        user_map = {u["user_id"]: u for u in users}
+        for camp in campaigns:
+            camp["user"] = user_map.get(camp.get("user_id"))
     
     return campaigns
 
