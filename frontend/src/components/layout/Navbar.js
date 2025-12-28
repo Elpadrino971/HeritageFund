@@ -106,6 +106,32 @@ export default function Navbar() {
 
                     {/* Right side actions */}
                     <div className="flex items-center space-x-2">
+                        {/* Language selector */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="rounded-full"
+                                    data-testid="language-selector"
+                                >
+                                    <span className="text-lg">{currentLang.flag}</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {languages.map((lang) => (
+                                    <DropdownMenuItem
+                                        key={lang.code}
+                                        onClick={() => changeLanguage(lang.code)}
+                                        className={i18n.language === lang.code ? 'bg-primary/10' : ''}
+                                    >
+                                        <span className="mr-2">{lang.flag}</span>
+                                        {lang.label}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
                         {/* Theme toggle */}
                         <Button
                             variant="ghost"
