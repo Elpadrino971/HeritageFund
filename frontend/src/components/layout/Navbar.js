@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from '../ui/button';
@@ -23,29 +24,44 @@ import {
     X,
     LogOut,
     User,
-    Settings
+    Settings,
+    Globe
 } from 'lucide-react';
+
+const languages = [
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+    { code: 'es', label: 'Español', flag: '🇪🇸' },
+    { code: 'pt', label: 'Português', flag: '🇵🇹' }
+];
 
 export default function Navbar() {
     const { user, login, logout, isAuthenticated } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const { t, i18n } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    const currentLang = languages.find(l => l.code === i18n.language) || languages[0];
+
     const navLinks = [
-        { href: '/', label: 'Accueil', icon: Home },
-        { href: '/calculator', label: 'Calculateur', icon: Calculator },
-        { href: '/campaigns', label: 'Campagnes', icon: Briefcase },
+        { href: '/', label: t('nav.home'), icon: Home },
+        { href: '/calculator', label: t('nav.calculator'), icon: Calculator },
+        { href: '/campaigns', label: t('nav.campaigns'), icon: Briefcase },
     ];
 
     const authLinks = [
-        { href: '/dashboard/heir', label: 'Héritier', icon: Briefcase, role: 'heir' },
-        { href: '/dashboard/investor', label: 'Investisseur', icon: TrendingUp, role: 'investor' },
-        { href: '/dashboard/notary', label: 'Notaire', icon: Scale, role: 'notary' },
+        { href: '/dashboard/heir', label: t('nav.heirSpace'), icon: Briefcase, role: 'heir' },
+        { href: '/dashboard/investor', label: t('nav.investorSpace'), icon: TrendingUp, role: 'investor' },
+        { href: '/dashboard/notary', label: t('nav.notarySpace'), icon: Scale, role: 'notary' },
     ];
 
     const isActive = (path) => location.pathname === path;
+
+    const changeLanguage = (code) => {
+        i18n.changeLanguage(code);
+    };
 
     const handleLogout = async () => {
         await logout();
