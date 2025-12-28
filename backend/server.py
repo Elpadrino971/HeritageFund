@@ -658,9 +658,17 @@ async def create_checkout(
         }
         await db.payment_transactions.insert_one(tx_doc)
         
+        # Audit log
+        await log_audit("PAYMENT_INITIATED", user_id=user.user_id, details={
+            "campaign_id": campaign_id,
+            "amount": amount,
+            "transaction_id": transaction_id
+        }, ip=client_ip)
+        
         return {"url": session.url, "session_id": session.session_id}
     except Exception as e:
         logger.error(f"Stripe checkout error: {str(e)}")
+        await log_audit("PAYMENT_ERROR", user_id=user.user_id, details={"error": str(e)}, ip=client_ip)
         raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
 
 @api_router.get("/payments/status/{session_id}")
