@@ -756,9 +756,15 @@ async def get_payment_status(session_id: str, request: Request, user: User = Dep
 
 @api_router.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
-    """Handle Stripe webhooks"""
+    """Handle Stripe webhooks with signature verification"""
     body = await request.body()
-    signature = request.headers.get("Stripe-Signature")
+    signature = request.headers.get("Stripe-Signature", "")
+    
+    # Verify webhook signature if secret is configured
+    if stripe_webhook_secret and not verify_stripe_signature(body, signature, stripe_webhook_secret):
+        logger.warning(f"Invalid Stripe webhook signature from {get_remote_address(request)}")
+        await log_audit("WEBHOOK_INVALID_SIGNATURE", ip=get_remote_address(request))
+        raise HTTPException(status_code=400, detail="Invalid signature")
     
     host_url = str(request.base_url).rstrip("/")
     webhook_url = f"{host_url}/api/webhook/stripe"
@@ -773,10 +779,23 @@ async def stripe_webhook(request: Request):
                 {"session_id": webhook_response.session_id},
                 {"$set": {"payment_status": "paid"}}
             )
+            
+            # Get transaction for audit
+            tx = await db.payment_transactions.find_one(
+                {"session_id": webhook_response.session_id},
+                {"_id": 0, "user_id": 1, "amount": 1, "campaign_id": 1}
+            )
+            if tx:
+                await log_audit("PAYMENT_COMPLETED", user_id=tx.get("user_id"), details={
+                    "amount": tx.get("amount"),
+                    "campaign_id": tx.get("campaign_id"),
+                    "session_id": webhook_response.session_id
+                })
         
         return {"received": True}
     except Exception as e:
         logger.error(f"Webhook error: {e}")
+        await log_audit("WEBHOOK_ERROR", details={"error": str(e)}, ip=get_remote_address(request))
         return {"received": False, "error": str(e)}
 
 # ================================
