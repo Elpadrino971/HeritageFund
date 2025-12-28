@@ -329,21 +329,28 @@ async def require_auth(request: Request) -> User:
 # ================================
 
 @api_router.get("/auth/session")
-async def process_session(session_id: str, response: Response):
+@limiter.limit("10/minute")
+async def process_session(request: Request, session_id: str, response: Response):
     """Process OAuth session_id and create local session"""
+    client_ip = get_remote_address(request)
+    
     try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
+        async with httpx.AsyncClient() as http_client:
+            resp = await http_client.get(
                 "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
                 headers={"X-Session-ID": session_id}
             )
             
             if resp.status_code != 200:
+                await log_audit("AUTH_FAILED", details={"reason": "invalid_session"}, ip=client_ip)
                 raise HTTPException(status_code=401, detail="Invalid session")
             
             data = resp.json()
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"OAuth error: {e}")
+        await log_audit("AUTH_ERROR", details={"error": str(e)}, ip=client_ip)
         raise HTTPException(status_code=401, detail="Authentication failed")
     
     email = data.get("email")
