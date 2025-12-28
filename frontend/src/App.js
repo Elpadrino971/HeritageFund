@@ -1,5 +1,6 @@
 import React from "react";
 import "@/App.css";
+import "./i18n"; // Initialize i18n
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider } from "./contexts/AuthContext";
