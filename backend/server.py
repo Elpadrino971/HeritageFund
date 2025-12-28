@@ -3,12 +3,17 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import os
 import logging
 import uuid
 import httpx
 import certifi
 import base64
+import hashlib
+import hmac
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
@@ -30,17 +35,69 @@ db = client[os.environ['DB_NAME']]
 
 # Stripe
 stripe_api_key = os.environ.get('STRIPE_API_KEY')
+stripe_webhook_secret = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
 # Cloudinary (optional - falls back to base64 storage)
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 
+# Allowed origins for CORS (production)
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'https://heritagefund.io,https://www.heritagefund.io,https://heritageguard.preview.emergentagent.com,http://localhost:3000').split(',')
+
+# Rate limiter
+limiter = Limiter(key_func=get_remote_address)
+
 # FastAPI app
-app = FastAPI(title="HeritageFund API")
+app = FastAPI(title="HeritageFund API", docs_url=None, redoc_url=None)  # Disable docs in production
 api_router = APIRouter(prefix="/api")
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# Add rate limiter to app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Configure logging with audit format
+logging.basicConfig(
+    level=logging.INFO, 
+    format='%(asctime)s - %(name)s - %(levelname)s - [%(funcName)s] %(message)s'
+)
 logger = logging.getLogger(__name__)
+
+# ================================
+# SECURITY HELPERS
+# ================================
+
+async def log_audit(action: str, user_id: str = None, details: dict = None, ip: str = None):
+    """Log security-relevant actions for audit trail"""
+    audit_entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "action": action,
+        "user_id": user_id,
+        "ip_address": ip,
+        "details": details or {}
+    }
+    await db.audit_logs.insert_one(audit_entry)
+    logger.info(f"AUDIT: {action} | user={user_id} | ip={ip} | details={details}")
+
+def verify_stripe_signature(payload: bytes, signature: str, secret: str) -> bool:
+    """Verify Stripe webhook signature"""
+    if not secret:
+        return True  # Skip verification if no secret configured
+    
+    try:
+        elements = dict(item.split('=') for item in signature.split(','))
+        timestamp = elements.get('t', '')
+        expected_sig = elements.get('v1', '')
+        
+        signed_payload = f"{timestamp}.{payload.decode('utf-8')}"
+        computed_sig = hmac.new(
+            secret.encode('utf-8'),
+            signed_payload.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        
+        return hmac.compare_digest(computed_sig, expected_sig)
+    except Exception as e:
+        logger.error(f"Stripe signature verification failed: {e}")
+        return False
 
 # ================================
 # MODELS
