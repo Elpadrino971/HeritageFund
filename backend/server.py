@@ -590,6 +590,7 @@ async def investment_stats(user: User = Depends(require_auth)):
 # ================================
 
 @api_router.post("/payments/create-checkout")
+@limiter.limit("5/minute")
 async def create_checkout(
     request: Request,
     campaign_id: str,
@@ -597,6 +598,7 @@ async def create_checkout(
     user: User = Depends(require_auth)
 ):
     """Create Stripe checkout session for investment"""
+    client_ip = get_remote_address(request)
     logger.info(f"Creating checkout for campaign {campaign_id}, amount {amount}, user {user.user_id}")
     
     if amount < 50:
