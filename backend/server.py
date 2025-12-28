@@ -379,6 +379,7 @@ async def process_session(request: Request, session_id: str, response: Response)
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         await db.users.insert_one(user_doc)
+        await log_audit("USER_CREATED", user_id=user_id, details={"email": email}, ip=client_ip)
     
     # Create session
     expires_at = datetime.now(timezone.utc) + timedelta(days=7)
@@ -391,7 +392,7 @@ async def process_session(request: Request, session_id: str, response: Response)
     }
     await db.user_sessions.insert_one(session_doc)
     
-    # Set cookie
+    # Set cookie with security flags
     response.set_cookie(
         key="session_token",
         value=session_token,
@@ -402,11 +403,14 @@ async def process_session(request: Request, session_id: str, response: Response)
         max_age=7 * 24 * 60 * 60
     )
     
+    await log_audit("LOGIN_SUCCESS", user_id=user_id, ip=client_ip)
+    
     user = await db.users.find_one({"user_id": user_id}, {"_id": 0})
     return user
 
 @api_router.get("/auth/me")
-async def get_me(user: User = Depends(require_auth)):
+@limiter.limit("60/minute")
+async def get_me(request: Request, user: User = Depends(require_auth)):
     """Get current user"""
     return user.model_dump()
 
@@ -414,8 +418,13 @@ async def get_me(user: User = Depends(require_auth)):
 async def logout(request: Request, response: Response):
     """Logout user"""
     session_token = request.cookies.get("session_token")
+    user = await get_current_user(request)
+    
     if session_token:
         await db.user_sessions.delete_many({"session_token": session_token})
+    
+    if user:
+        await log_audit("LOGOUT", user_id=user.user_id, ip=get_remote_address(request))
     
     response.delete_cookie(key="session_token", path="/")
     return {"message": "Logged out"}
