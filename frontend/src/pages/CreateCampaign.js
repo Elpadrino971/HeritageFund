@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Slider } from '../components/ui/slider';
 import { toast } from 'sonner';
 import axios from 'axios';
+import CampaignFinanceCalculator from '../components/campaign/CampaignFinanceCalculator';
 import { 
     ArrowLeft, 
     ArrowRight, 
@@ -32,6 +33,7 @@ export default function CreateCampaign() {
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [financeConfig, setFinanceConfig] = useState(null);
     
     const [formData, setFormData] = useState({
         title: '',
@@ -41,7 +43,8 @@ export default function CreateCampaign() {
         property_value: '',
         location: '',
         target_amount: '',
-        interest_rate: 5,
+        succession_amount: '',
+        interest_rate: 10,
         duration_months: 24,
         images: []
     });
